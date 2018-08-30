@@ -1,0 +1,103 @@
+SELECT country_code, size,
+  CASE WHEN size > 50000000
+            THEN 'large'
+       WHEN size > 1000000
+            THEN 'medium'
+       ELSE 'small' END
+       AS popsize_group
+INTO pop_plus       
+FROM populations
+WHERE year = 2015;
+
+SELECT name, continent, geosize_group, popsize_group
+FROM countries_plus AS c
+INNER JOIN pop_plus AS p
+ON c.code = p.country_code
+ORDER BY geosize_group;
+
+-- get the city name (and alias it), the country code,
+-- the country name (and alias it), the region,
+-- and the city proper population
+select c1.name AS city, code, c2.name AS country,
+       region, city_proper_pop
+-- specify left table
+FROM cities AS c1
+-- specify right table and type of join
+inner join countries AS c2
+-- how should the tables be matched?
+ON c1.country_code = c2.code
+-- sort based on descending country code
+ORDER BY code desc;
+
+SELECT code, year
+FROM economies
+INTERSECT
+SELECT country_code, year
+FROM populations
+ORDER BY code, year;
+
+SELECT MAX(inflation_rate) AS max_inf
+  FROM (
+      SELECT name, continent, inflation_rate
+      FROM countries
+      INNER JOIN economies
+      USING (code)
+      WHERE year = 2015) AS subquery
+GROUP BY continent;
+
+SELECT name, continent, inflation_rate
+FROM countries
+INNER JOIN economies
+ON countries.code = economies.code
+WHERE year = 2015
+    AND inflation_rate IN (
+        SELECT MAX(inflation_rate) AS max_inf
+        FROM (
+             SELECT name, continent, inflation_rate
+             FROM countries
+             INNER JOIN economies
+             ON countries.code = economies.code
+             WHERE year = 2015) AS subquery
+        GROUP BY continent);
+        
+SELECT DISTINCT name, total_investment, imports
+FROM countries AS c
+LEFT JOIN economies AS e
+ON (c.code = e.code
+  AND c.code IN (
+    SELECT l.code
+    FROM languages AS l
+    WHERE official = 'true'
+  ) )
+WHERE region = 'Central America' AND year = 2015
+ORDER BY name;
+
+-- choose fields
+SELECT region, continent, AVG(fertility_rate) AS avg_fert_rate
+-- left table
+FROM countries AS c
+-- right table
+INNER JOIN populations AS p
+-- join conditions
+ON c.code = p.country_code
+-- specific records matching a condition
+WHERE year = 2015
+-- aggregated for each what?
+GROUP BY region, continent
+-- how should we sort?
+ORDER BY avg_fert_rate;
+
+
+
+
+SELECT name, country_code, city_proper_pop, metroarea_pop,  
+      city_proper_pop / metroarea_pop * 100 AS city_perc
+FROM cities
+WHERE name IN
+  (SELECT capital
+   FROM countries
+   WHERE (continent = 'Europe'
+      OR continent LIKE '%America'))
+     AND metroarea_pop IS NOT NULL
+ORDER BY city_perc DESC
+LIMIT 10;
