@@ -238,3 +238,34 @@ plt.xticks(rotation=90)
 plt.show()
 
 
+from sklearn.ensemble import GradientBoostingRegressor
+
+# Create GB model -- hyperparameters have already been searched for you
+gbr = GradientBoostingRegressor(max_features=4,
+                                learning_rate=0.01,
+                                n_estimators=200,
+                                subsample=0.6,
+                                random_state=42)
+gbr.fit(train_features, train_targets)
+
+print(gbr.score(train_features, train_targets))
+print(gbr.score(test_features, test_targets))
+
+# Extract feature importances from the fitted gradient boosting model
+feature_importances = gbr.feature_importances_
+
+# Get the indices of the largest to smallest feature importances
+sorted_index = np.argsort(feature_importances)[::-1]
+x = range(features.shape[1])
+
+# Create tick labels 
+labels = np.array(feature_names)[sorted_index]
+
+plt.bar(x, feature_importances[sorted_index], tick_label=labels)
+
+# Set the tick lables to be the feature names, according to the sorted feature_idx
+plt.xticks(rotation=90)
+plt.show()
+
+#----------------------------------------------------
+
