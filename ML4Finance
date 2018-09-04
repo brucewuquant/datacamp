@@ -107,3 +107,79 @@ plt.ylabel('actual')
 plt.legend()  # show the legend
 plt.show()
 
+# Create 2 new volume features, 1-day % change and 5-day SMA of the % change
+new_features = ['Adj_Volume_1d_change', 'Adj_Volume_1d_change_SMA']
+feature_names.extend(new_features)
+lng_df['Adj_Volume_1d_change'] = lng_df['Adj_Volume'].pct_change()
+lng_df['Adj_Volume_1d_change_SMA'] = talib.SMA(lng_df['Adj_Volume_1d_change'].values,
+                        timeperiod=5)
+
+# Plot histogram of volume % change data
+lng_df[new_features].plot(kind='hist', sharex=False, bins=50)
+plt.show()
+
+# Use pandas' get_dummies function to get dummies for day of the week
+days_of_week = pd.get_dummies(lng_df.index.dayofweek,
+                              prefix='weekday',
+                              drop_first=True)
+
+# Set the index as the original dataframe index for merging
+days_of_week.index = lng_df.index
+
+# Join the dataframe with the days of week dataframe
+lng_df = pd.concat([lng_df, days_of_week], axis=1)
+
+# Add days of week to feature names
+feature_names.extend(['weekday_' + str(i) for i in range(1, 5)])
+lng_df.dropna(inplace=True)  # drop missing values in-place
+print(lng_df.head())
+
+# Add the weekday labels to the new_features list
+new_features.extend(['weekday_'+str(i) for i in range(1, 5)])
+
+# Plot the correlations between the new features and the targets
+sns.heatmap(lng_df[new_features + ['5d_close_future_pct']].corr(), annot=True)
+plt.yticks(rotation=0)  # ensure y-axis ticklabels are horizontal
+plt.xticks(rotation=90)  # ensure x-axis ticklabels are vertical
+plt.tight_layout()
+plt.show()
+
+from sklearn.tree import DecisionTreeRegressor
+
+# Create a decision tree regression model with default arguments
+decision_tree = DecisionTreeRegressor()
+
+# Fit the model to the training features and targets
+decision_tree.fit(train_features, train_targets)
+
+# Check the score on train and test
+print(decision_tree.score(train_features, train_targets))
+print(decision_tree.score(test_features, test_targets))
+
+# Loop through a few different max depths and check the performance
+for d in [3,5,10]:
+    # Create the tree and fit it
+    decision_tree = DecisionTreeRegressor(max_depth = d)
+    decision_tree.fit(train_features, train_targets)
+
+    # Print out the scores on train and test
+    print('max_depth=', str(d))
+    print(decision_tree.score(train_features, train_targets))
+    # \n prints a blank line
+    print(decision_tree.score(test_features, test_targets), '\n')
+    
+# Use the best max_depth of 3 from last exercise to fit a decision tree
+decision_tree = DecisionTreeRegressor(max_depth=3)
+decision_tree.fit(train_features, train_targets)
+
+# Predict values for train and test
+train_predictions = decision_tree.predict(train_features)
+test_predictions = decision_tree.predict(test_features)
+
+# Scatter the predictions vs actual values
+plt.scatter(train_predictions, train_targets, label='train')
+plt.scatter(test_predictions, test_targets, label = 'test')
+plt.show()
+
+
+
