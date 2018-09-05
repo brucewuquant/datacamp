@@ -11,3 +11,43 @@ dt.fit(X_train, y_train)
 y_pred = dt.predict(X_test)
 print(y_pred[0:5])
 
+# Import accuracy_score from sklearn.metrics
+from sklearn.metrics import accuracy_score
+
+# Use dt_entropy to predict test set labels
+y_pred = dt_entropy.predict(X_test)
+
+# Evaluate accuracy_entropy
+accuracy_entropy = accuracy_score(y_pred, y_test)
+
+# Print accuracy_entropy
+print('Accuracy achieved by using entropy: ', accuracy_entropy)
+
+# Print accuracy_gini
+print('Accuracy achieved by using the gini index: ', accuracy_gini)
+
+from sklearn.tree import DecisionTreeRegressor
+
+# Instantiate dt
+dt = DecisionTreeRegressor(max_depth=8,
+             min_samples_leaf=0.13,
+            random_state= 3)
+
+# Fit dt to the training set
+dt.fit(X_train, y_train)
+
+# Predict test set labels 
+y_pred_lr =lr.predict(X_test)
+
+# Compute mse_lr
+mse_lr = MSE(y_pred_lr, y_test)
+
+# Compute rmse_lr
+rmse_lr = mse_lr**(0.5)
+
+# Print rmse_lr
+print('Linear Regression test set RMSE: {:.2f}'.format(rmse_lr))
+
+# Print rmse_dt
+print('Regression Tree test set RMSE: {:.2f}'.format(rmse_dt))
+
